@@ -21,8 +21,8 @@ package org.spdx.spreadsheetstore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -85,12 +85,7 @@ public class SpreadsheetStore extends ExtendedSpdxStore implements ISerializable
 
 	private SpreadsheetFormatType spreadsheetFormat;
 	
-	private static final ThreadLocal<DateFormat> FORMAT = new ThreadLocal<DateFormat>() {
-		@Override
-		protected DateFormat initialValue() {
-			return new SimpleDateFormat(SpdxConstantsCompatV2.SPDX_DATE_FORMAT);
-		}
-	};
+	private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern(SpdxConstantsCompatV2.SPDX_DATE_FORMAT).withZone(ZoneOffset.UTC);
 
 	/**
 	 * Constructs an SPDX model store which serializes and deserializes to
@@ -512,7 +507,7 @@ public class SpreadsheetStore extends ExtendedSpdxStore implements ISerializable
 	private void copyDocumentInfoFromSS(DocumentInfoSheet documentInfoSheet, SpdxDocument document,
 			String documentUri, ModelCopyManager copyManager) throws InvalidSPDXAnalysisException {
 		Date createdDate = documentInfoSheet.getCreated();
-		String created  = FORMAT.get().format(createdDate);
+		String created  = FORMAT.format(createdDate.toInstant());
 		List<String> createdBys = documentInfoSheet.getCreatedBy();
 		SpdxCreatorInformation creationInfo = document.createCreationInfo(createdBys, created); 
 		String creatorComment = documentInfoSheet.getAuthorComments();
@@ -705,6 +700,5 @@ public class SpreadsheetStore extends ExtendedSpdxStore implements ISerializable
 	 * Unload the spreadsheet store
 	 */
 	public void unload() {
-	    FORMAT.remove();  // Release the thread-local DateFormat instance
 	}
 }
